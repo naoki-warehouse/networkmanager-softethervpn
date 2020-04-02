@@ -27,7 +27,7 @@
 
 #include "nm-default.h"
 
-#include "nm-wireguard-editor.h"
+#include "nm-softethervpn-editor.h"
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -40,19 +40,19 @@
 
 /*****************************************************************************/
 
-static void wireguard_editor_plugin_widget_interface_init (NMVpnEditorInterface *iface_class);
+static void softethervpn_editor_plugin_widget_interface_init (NMVpnEditorInterface *iface_class);
 
-G_DEFINE_TYPE_EXTENDED (WireguardEditor, wireguard_editor_plugin_widget, G_TYPE_OBJECT, 0,
+G_DEFINE_TYPE_EXTENDED (SoftetherVPNEditor, softethervpn_editor_plugin_widget, G_TYPE_OBJECT, 0,
                         G_IMPLEMENT_INTERFACE (NM_TYPE_VPN_EDITOR,
-                                               wireguard_editor_plugin_widget_interface_init))
+                                               softethervpn_editor_plugin_widget_interface_init))
 
-#define WIREGUARD_EDITOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), WIREGUARD_TYPE_EDITOR, WireguardEditorPrivate))
+#define SOFTETHERVPN_EDITOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SOFTETHERVPN_TYPE_EDITOR, SoftetherVPNEditorPrivate))
 
 typedef struct {
 	GtkBuilder *builder;
 	GtkWidget *widget;
 	gboolean new_connection;
-} WireguardEditorPrivate;
+} SoftetherVPNEditorPrivate;
 
 /*****************************************************************************/
 // functions for checking the contents of the input fields in the GUI
@@ -192,7 +192,7 @@ typedef gboolean (*CheckFunc)(const char *str);
 
 // helper function to reduce boilerplate code in 'check_validity()'
 static gboolean
-check (WireguardEditorPrivate *priv,
+check (SoftetherVPNEditorPrivate *priv,
 		char *widget_name,
 		CheckFunc chk,
 		const char *key,
@@ -223,7 +223,7 @@ check (WireguardEditorPrivate *priv,
 
 // add or remove the "error" class from the specified input field
 static void
-set_error_class(WireguardEditorPrivate *priv, char *widget_name, gboolean error)
+set_error_class(SoftetherVPNEditorPrivate *priv, char *widget_name, gboolean error)
 {
 	GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, widget_name));
 	if(error){
@@ -236,7 +236,7 @@ set_error_class(WireguardEditorPrivate *priv, char *widget_name, gboolean error)
 
 // check if the specified input field contains any user input
 static gboolean
-is_filled_out(WireguardEditorPrivate *priv, char *widget_name)
+is_filled_out(SoftetherVPNEditorPrivate *priv, char *widget_name)
 {
 	const char *str;
 	GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, widget_name));
@@ -249,47 +249,59 @@ is_filled_out(WireguardEditorPrivate *priv, char *widget_name)
 // if there is an error in one or more of the input fields, mark the corresponding
 // input fields with the "error" class
 static gboolean
-check_validity (WireguardEditor *self, GError **error)
+check_validity (SoftetherVPNEditor *self, GError **error)
 {
-	WireguardEditorPrivate *priv = WIREGUARD_EDITOR_GET_PRIVATE (self);
+	SoftetherVPNEditorPrivate *priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (self);
 	gboolean success = TRUE;
 	gboolean ip4_ok = TRUE;
 	gboolean ip6_ok = TRUE;
 
 	// check the various input fields for errors
-	if(!check(priv, "interface_ip4_entry", check_interface_ip4_entry, NM_WG_KEY_ADDR_IP4, FALSE, error)){
+	if(!check(priv, "interface_ip4_entry", check_interface_ip4_entry, NM_SV_KEY_ADDR_IP4, FALSE, error)){
 		ip4_ok = FALSE;
 	}
-	if(!check(priv, "interface_ip6_entry", check_interface_ip6_entry, NM_WG_KEY_ADDR_IP6, FALSE, error)){
+	if(!check(priv, "interface_ip6_entry", check_interface_ip6_entry, NM_SV_KEY_ADDR_IP6, FALSE, error)){
 		ip6_ok = FALSE;
 	}
-	if(!check(priv, "interface_private_key_entry", check_interface_private_key, NM_WG_KEY_PRIVATE_KEY, TRUE, error)){
+	if(!check(priv, "interface_private_key_entry", check_interface_private_key, NM_SV_KEY_PRIVATE_KEY, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "interface_port_entry", check_interface_listen_port, NM_WG_KEY_LISTEN_PORT, TRUE, error)){
+    /*
+	if(!check(priv, "interface_port_entry", check_interface_listen_port, NM_SV_KEY_LISTEN_PORT, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "interface_dns_entry", check_interface_dns_entry, NM_WG_KEY_DNS, TRUE, error)){
+    */
+	if(!check(priv, "interface_dns_entry", check_interface_dns_entry, NM_SV_KEY_DNS, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "interface_mtu_entry", check_interface_mtu_entry, NM_WG_KEY_MTU, TRUE, error)){
+	if(!check(priv, "interface_mtu_entry", check_interface_mtu_entry, NM_SV_KEY_MTU, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "peer_public_key_entry", check_peer_public_key, NM_WG_KEY_PUBLIC_KEY, TRUE, error)){
+    /*
+	if(!check(priv, "peer_public_key_entry", check_peer_public_key, NM_SV_KEY_PUBLIC_KEY, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "peer_allowed_ips_entry", check_peer_allowed_ips, NM_WG_KEY_ALLOWED_IPS, TRUE, error)){
+    */
+    /*
+	if(!check(priv, "peer_allowed_ips_entry", check_peer_allowed_ips, NM_SV_KEY_ALLOWED_IPS, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "peer_endpoint_entry", check_peer_endpoint, NM_WG_KEY_ENDPOINT, TRUE, error)){
+    */
+    /*
+	if(!check(priv, "peer_endpoint_entry", check_peer_endpoint, NM_SV_KEY_ENDPOINT, TRUE, error)){
 		success = FALSE;
 	}
-	if(!check(priv, "peer_psk_entry", check_peer_preshared_key, NM_WG_KEY_PRESHARED_KEY, TRUE, error)){
+    */
+    /*
+	if(!check(priv, "peer_psk_entry", check_peer_preshared_key, NM_SV_KEY_PRESHARED_KEY, TRUE, error)){
 		success = FALSE;
 	}
-        if(!check(priv, "peer_persistent_keep_alive_entry", check_peer_persistent_keep_alive_entry, NM_WG_KEY_PERSISTENT_KEEP_ALIVE, TRUE, error)){
+    */
+    /*
+        if(!check(priv, "peer_persistent_keep_alive_entry", check_peer_persistent_keep_alive_entry, NM_SV_KEY_PERSISTENT_KEEP_ALIVE, TRUE, error)){
 		success = FALSE;
 	}
+    */
 	// pre-up, post-up, pre-down, post-down are scripts and don't get validated
 
 	if(ip4_ok && ip6_ok){
@@ -304,7 +316,7 @@ check_validity (WireguardEditor *self, GError **error)
 			g_set_error (error,
 						NMV_EDITOR_PLUGIN_ERROR,
 						NMV_EDITOR_PLUGIN_ERROR_INVALID_PROPERTY,
-						NM_WG_KEY_ADDR_IP6);
+						NM_SV_KEY_ADDR_IP6);
 		}
 		else{
 			// IP6 is not filled out: OK
@@ -319,7 +331,7 @@ check_validity (WireguardEditor *self, GError **error)
 			g_set_error (error,
 						NMV_EDITOR_PLUGIN_ERROR,
 						NMV_EDITOR_PLUGIN_ERROR_INVALID_PROPERTY,
-						NM_WG_KEY_ADDR_IP4);
+						NM_SV_KEY_ADDR_IP4);
 		}
 		else{
 			// IP4 is not filled out: OK
@@ -335,26 +347,76 @@ check_validity (WireguardEditor *self, GError **error)
 static void
 stuff_changed_cb (GtkWidget *widget, gpointer user_data)
 {
-	g_signal_emit_by_name (WIREGUARD_EDITOR (user_data), "changed");
+	g_signal_emit_by_name (SOFTETHERVPN_EDITOR (user_data), "changed");
 }
 
 // set up the GUI: fill the contents of the input fields with the stuff contained
 // in our NMConnection
 static gboolean
-init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **error)
+init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError **error)
 {
-	WireguardEditorPrivate *priv = WIREGUARD_EDITOR_GET_PRIVATE (self);
+	SoftetherVPNEditorPrivate *priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (self);
 	NMSettingVpn *s_vpn;
 	GtkWidget *widget;
 	const char *value;
 
 	s_vpn = nm_connection_get_setting_vpn (connection);
 
+    //Server endpoint
+    widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_endpoint_entry"));
+    g_return_val_if_fail (widget != NULL, FALSE);
+    if (s_vpn) {
+        value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_ENDPOINT);
+        if(value) 
+            gtk_entry_set_text (GTK_ENTRY (widget), value);
+    }
+    g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+
+    //Server port
+    widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_port_entry"));
+    g_return_val_if_fail (widget != NULL, FALSE);
+    if (s_vpn) {
+        value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PORT);
+        if(value) 
+            gtk_entry_set_text (GTK_ENTRY (widget), value);
+    }
+    g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+
+    //Server hub
+    widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_hub_entry"));
+    g_return_val_if_fail (widget != NULL, FALSE);
+    if (s_vpn) {
+        value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_HUB);
+        if(value) 
+            gtk_entry_set_text (GTK_ENTRY (widget), value);
+    }
+    g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+
+    //Connection username
+    widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_user_entry"));
+    g_return_val_if_fail (widget != NULL, FALSE);
+    if (s_vpn) {
+        value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_USERNAME);
+        if(value) 
+            gtk_entry_set_text (GTK_ENTRY (widget), value);
+    }
+    g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+
+    //Connection password
+    widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_password_entry"));
+    g_return_val_if_fail (widget != NULL, FALSE);
+    if (s_vpn) {
+        value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PASSWORD);
+        if(value) 
+            gtk_entry_set_text (GTK_ENTRY (widget), value);
+    }
+    g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+
 	// Local IPv4 address
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip4_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_ADDR_IP4);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_ADDR_IP4);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
@@ -364,7 +426,7 @@ init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **er
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip6_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_ADDR_IP6);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_ADDR_IP6);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
@@ -374,7 +436,7 @@ init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **er
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_dns_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_DNS);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_DNS);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
@@ -384,7 +446,7 @@ init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **er
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_mtu_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_MTU);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_MTU);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
@@ -394,111 +456,131 @@ init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **er
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_private_key_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PRIVATE_KEY);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PRIVATE_KEY);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
 
 	// Interface Listening Port
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_port_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_LISTEN_PORT);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_LISTEN_PORT);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Pre Up
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_pre_up_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PRE_UP);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PRE_UP);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Post Up
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_post_up_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_POST_UP);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_POST_UP);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Pre Down
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_pre_down_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PRE_DOWN);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PRE_DOWN);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Post Down
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_post_down_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_POST_DOWN);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_POST_DOWN);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Preshared Key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_psk_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PRESHARED_KEY);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PRESHARED_KEY);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
         // Peer Persistent Keep Alive
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_persistent_keep_alive_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PERSISTENT_KEEP_ALIVE);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PERSISTENT_KEEP_ALIVE);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 	
 	// Peer Public Key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_public_key_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_PUBLIC_KEY);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_PUBLIC_KEY);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Peer Allowed IPs
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_allowed_ips_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_ALLOWED_IPS);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_ALLOWED_IPS);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Peer Endpoint
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_endpoint_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
-		value = nm_setting_vpn_get_data_item (s_vpn, NM_WG_KEY_ENDPOINT);
+		value = nm_setting_vpn_get_data_item (s_vpn, NM_SV_KEY_ENDPOINT);
 		if (value)
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	return TRUE;
 }
@@ -507,8 +589,8 @@ init_editor_plugin (WireguardEditor *self, NMConnection *connection, GError **er
 static GObject *
 get_widget (NMVpnEditor *iface)
 {
-	WireguardEditor *self = WIREGUARD_EDITOR (iface);
-	WireguardEditorPrivate *priv = WIREGUARD_EDITOR_GET_PRIVATE (self);
+	SoftetherVPNEditor *self = SOFTETHERVPN_EDITOR (iface);
+	SoftetherVPNEditorPrivate *priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (self);
 
 	return G_OBJECT (priv->widget);
 }
@@ -520,8 +602,8 @@ update_connection (NMVpnEditor *iface,
                    NMConnection *connection,
                    GError **error)
 {
-	WireguardEditor *self = WIREGUARD_EDITOR (iface);
-	WireguardEditorPrivate *priv = WIREGUARD_EDITOR_GET_PRIVATE (self);
+	SoftetherVPNEditor *self = SOFTETHERVPN_EDITOR (iface);
+	SoftetherVPNEditorPrivate *priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (self);
 	NMSettingVpn *s_vpn;
 	GtkWidget *widget;
 	const char *str;
@@ -533,112 +615,167 @@ update_connection (NMVpnEditor *iface,
 	}
 
 	s_vpn = NM_SETTING_VPN (nm_setting_vpn_new ());
-	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPN_SERVICE_TYPE_WIREGUARD, NULL);
+	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPN_SERVICE_TYPE_SOFTETHERVPN, NULL);
+
+	// Server endpoint
+	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_endpoint_entry"));
+	str = gtk_entry_get_text (GTK_ENTRY (widget));
+	if (str && str[0]){
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ENDPOINT, str);
+	}
+
+	// Server port
+	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_port_entry"));
+	str = gtk_entry_get_text (GTK_ENTRY (widget));
+	if (str && str[0]){
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PORT, str);
+	}
+
+	// Server hub
+	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_hub_entry"));
+	str = gtk_entry_get_text (GTK_ENTRY (widget));
+	if (str && str[0]){
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_HUB, str);
+	}
+
+	// Connection username
+	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_user_entry"));
+	str = gtk_entry_get_text (GTK_ENTRY (widget));
+	if (str && str[0]){
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_USERNAME, str);
+	}
+
+	// Connection password
+	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_password_entry"));
+	str = gtk_entry_get_text (GTK_ENTRY (widget));
+	if (str && str[0]){
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PASSWORD, str);
+	}
 
 	// local ip4
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip4_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_ADDR_IP4, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ADDR_IP4, str);
 	}
 
 	// local ip6
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip6_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_ADDR_IP6, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ADDR_IP6, str);
 	}
 
 	// private key
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_private_key_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PRIVATE_KEY, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PRIVATE_KEY, str);
 	}
 
 	// dns
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_dns_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_DNS, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_DNS, str);
 	}
 
 	// mtu
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_mtu_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_MTU, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_MTU, str);
 	}
 
 	// listen port
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_port_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_LISTEN_PORT, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_LISTEN_PORT, str);
 	}
+    */
 
 	// pre up script
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_pre_up_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PRE_UP, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PRE_UP, str);
 	}
+    */
 
 	// post up script
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_post_up_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_POST_UP, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_POST_UP, str);
 	}
+    */
 
 	// pre up script
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_pre_down_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PRE_DOWN, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PRE_DOWN, str);
 	}
+    */
 
 	// post down script
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_post_down_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_POST_DOWN, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_POST_DOWN, str);
 	}
+    */
 
 	// preshared key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_psk_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PRESHARED_KEY, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PRESHARED_KEY, str);
 	}
+    */
 
 	// peer public key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_public_key_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PUBLIC_KEY, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PUBLIC_KEY, str);
 	}
+    */
 
 	// allowed IPs
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_allowed_ips_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_ALLOWED_IPS, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ALLOWED_IPS, str);
 	}
+    */
 
 	// endpoint
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_endpoint_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_ENDPOINT, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ENDPOINT, str);
 	}
+    */
         
         // persistent keep alive
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "peer_persistent_keep_alive_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
-		nm_setting_vpn_add_data_item (s_vpn, NM_WG_KEY_PERSISTENT_KEEP_ALIVE, str);
+		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PERSISTENT_KEEP_ALIVE, str);
 	}
+    */
 
 	nm_connection_add_setting (connection, NM_SETTING (s_vpn));
 	valid = TRUE;
@@ -659,28 +796,28 @@ is_new_func (const char *key, const char *value, gpointer user_data)
 /*****************************************************************************/
 
 static void
-wireguard_editor_plugin_widget_init (WireguardEditor *plugin)
+softethervpn_editor_plugin_widget_init (SoftetherVPNEditor *plugin)
 {
 }
 
 NMVpnEditor *
-wireguard_editor_new (NMConnection *connection, GError **error)
+softethervpn_editor_new (NMConnection *connection, GError **error)
 {
 	NMVpnEditor *object;
-	WireguardEditorPrivate *priv;
+	SoftetherVPNEditorPrivate *priv;
 	gboolean new = TRUE;
 	NMSettingVpn *s_vpn;
 
 	if (error)
 		g_return_val_if_fail (*error == NULL, NULL);
 
-	object = g_object_new (WIREGUARD_TYPE_EDITOR, NULL);
+	object = g_object_new (SOFTETHERVPN_TYPE_EDITOR, NULL);
 	if (!object) {
-		g_set_error_literal (error, NMV_EDITOR_PLUGIN_ERROR, 0, "Could not create wireguard object");
+		g_set_error_literal (error, NMV_EDITOR_PLUGIN_ERROR, 0, "Could not create softethervpn object");
 		return NULL;
 	}
 
-	priv = WIREGUARD_EDITOR_GET_PRIVATE (object);
+	priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (object);
 
 	priv->builder = gtk_builder_new ();
 
@@ -688,7 +825,7 @@ wireguard_editor_new (NMConnection *connection, GError **error)
 
 	// create the GUI from our .ui file
 	// note: the resource is described in gresource.xml and gets compiled to resources.c
-	if (!gtk_builder_add_from_resource (priv->builder, "/org/freedesktop/network-manager-wireguard/nm-wireguard-dialog.ui", error)) {
+	if (!gtk_builder_add_from_resource (priv->builder, "/org/freedesktop/network-manager-softethervpn/nm-softethervpn-dialog.ui", error)) {
 		g_object_unref (object);
 		g_return_val_if_reached (NULL);
 	}
@@ -707,7 +844,7 @@ wireguard_editor_new (NMConnection *connection, GError **error)
 		nm_setting_vpn_foreach_data_item (s_vpn, is_new_func, &new);
 	priv->new_connection = new;
 
-	if (!init_editor_plugin (WIREGUARD_EDITOR (object), connection, error)) {
+	if (!init_editor_plugin (SOFTETHERVPN_EDITOR (object), connection, error)) {
 		g_object_unref (object);
 		return NULL;
 	}
@@ -718,18 +855,18 @@ wireguard_editor_new (NMConnection *connection, GError **error)
 static void
 dispose (GObject *object)
 {
-	WireguardEditor *plugin = WIREGUARD_EDITOR (object);
-	WireguardEditorPrivate *priv = WIREGUARD_EDITOR_GET_PRIVATE (plugin);
+	SoftetherVPNEditor *plugin = SOFTETHERVPN_EDITOR (object);
+	SoftetherVPNEditorPrivate *priv = SOFTETHERVPN_EDITOR_GET_PRIVATE (plugin);
 
 	g_clear_object (&priv->widget);
 
 	g_clear_object (&priv->builder);
 
-	G_OBJECT_CLASS (wireguard_editor_plugin_widget_parent_class)->dispose (object);
+	G_OBJECT_CLASS (softethervpn_editor_plugin_widget_parent_class)->dispose (object);
 }
 
 static void
-wireguard_editor_plugin_widget_interface_init (NMVpnEditorInterface *iface_class)
+softethervpn_editor_plugin_widget_interface_init (NMVpnEditorInterface *iface_class)
 {
 	/* interface implementation */
 	iface_class->get_widget = get_widget;
@@ -737,11 +874,11 @@ wireguard_editor_plugin_widget_interface_init (NMVpnEditorInterface *iface_class
 }
 
 static void
-wireguard_editor_plugin_widget_class_init (WireguardEditorClass *req_class)
+softethervpn_editor_plugin_widget_class_init (SoftetherVPNEditorClass *req_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (req_class);
 
-	g_type_class_add_private (req_class, sizeof (WireguardEditorPrivate));
+	g_type_class_add_private (req_class, sizeof (SoftetherVPNEditorPrivate));
 
 	object_class->dispose = dispose;
 }
@@ -750,16 +887,16 @@ wireguard_editor_plugin_widget_class_init (WireguardEditorClass *req_class)
 
 #ifndef NM_VPN_OLD
 
-#include "nm-wireguard-editor-plugin.h"
+#include "nm-softethervpn-editor-plugin.h"
 
 G_MODULE_EXPORT NMVpnEditor *
-nm_vpn_editor_factory_wireguard (NMVpnEditorPlugin *editor_plugin,
+nm_vpn_editor_factory_softethervpn (NMVpnEditorPlugin *editor_plugin,
                                NMConnection *connection,
                                GError **error)
 {
 	g_return_val_if_fail (!error || !*error, NULL);
 
-	return wireguard_editor_new (connection, error);
+	return softethervpn_editor_new (connection, error);
 }
 #endif
 

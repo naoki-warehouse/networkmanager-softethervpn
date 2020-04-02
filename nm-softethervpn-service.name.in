@@ -1,0 +1,14 @@
+[VPN Connection]
+name=softethervpn
+service=org.freedesktop.NetworkManager.softethervpn
+program=@LIBEXECDIR@/nm-softethervpn-service
+supports-multiple-connections=false
+
+[libnm]
+plugin=@PLUGINDIR@/libnm-vpn-plugin-softethervpn.so
+
+[GNOME]
+auth-dialog=@LIBEXECDIR@/nm-softethervpn-auth-dialog
+properties=@PLUGINDIR@/libnm-softethervpn-properties
+supports-external-ui-mode=false
+supports-hints=false

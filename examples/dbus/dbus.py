@@ -85,16 +85,16 @@ def hibernate():
         print(str(ex))
 
 
-def get_wg_plugin(bus_name="org.freedesktop.NetworkManager.wireguard",
+def get_sv_plugin(bus_name="org.freedesktop.NetworkManager.softethervpn",
                   object_path="/org/freedesktop/NetworkManager/VPN/Plugin"):
-    """Retrieve the WireGuard VPN plugin from the System Bus.
+    """Retrieve the SoftEther VPN plugin from the System Bus.
 
     Arguments:
     bus_name -- the bus name of the object to import
     object_path -- the object path of hte object (= where to find the interface)
     """
 
-    # since our wireguard plugin implements the VPN plugin and does not export
+    # since our softether plugin implements the VPN plugin and does not export
     # an interface on its own, we need to use the VPN plugin interfce
     bus = SystemBus()
     wg = bus.get(bus_name, object_path)
@@ -106,12 +106,12 @@ def wg_disconnect(wg_plugin):
 
     wg_plugin.Disconnect()
 
-def wg_connect(wg_plugin):
-    """Send the Connect Command to the WireGuard Plugin"""
+def sv_connect(wg_plugin):
+    """Send the Connect Command to the SoftEtherVPN Plugin"""
 
     # these are the settings that are expected by Connect(a{sa{sv}}) for a VPN plugin
     service_type = GLib.Variant("s", "service")
-    user_name = GLib.Variant("s", "wireguard")
+    user_name = GLib.Variant("s", "softethervpn")
     persistent = GLib.Variant("b", False)
     data = GLib.Variant("a{ss}", {"maxi": "cool"})
     secrets = GLib.Variant("a{ss}", {"name": "maxi moser"})
@@ -137,13 +137,13 @@ show_introspect = False
 if __name__ == "__main__":
     # send_desktop_notification("Guten Tag", "pydbus funktioniert, mein Herr!")
     try:
-        wg = get_wg_plugin()
+        sv = get_sv_plugin()
         
         if show_introspect:
-            print(wg.Introspect())
-            help(wg)
+            print(sv.Introspect())
+            help(sv)
 
-        wg_connect(wg)
+        sv_connect(sv)
 
     except Exception as ex:
         print(str(ex))

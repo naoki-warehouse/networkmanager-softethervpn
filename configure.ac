@@ -1,9 +1,9 @@
 AC_PREREQ(2.52)
 
-AC_INIT(NetworkManager-wireguard,
-        0.9.0,
+AC_INIT(NetworkManager-softethervpn,
+        0.0.1,
         https://example.org/bugtracker?product=nm-wg,
-        NetworkManager-wireguard)
+        NetworkManager-softethervpn)
 AM_INIT_AUTOMAKE([1.9 tar-ustar no-dist-gzip dist-xz])
 AM_MAINTAINER_MODE
 AM_SILENT_RULES([yes])
@@ -63,8 +63,8 @@ AC_SUBST([ACLOCAL_AMFLAGS])
 dnl
 dnl GNOME support
 dnl
-AC_ARG_WITH(gnome, AS_HELP_STRING([--without-gnome], [Build NetworkManager-wireguard without GNOME support, e.g. vpn service only]), [], [with_gnome_specified=no])
-AC_ARG_WITH(libnm-glib, AS_HELP_STRING([--without-libnm-glib], [Build NetworkManager-wireguard without libnm-glib comatibility]), [], [with_libnm_glib_specified=no])
+AC_ARG_WITH(gnome, AS_HELP_STRING([--without-gnome], [Build NetworkManager-softethervpn without GNOME support, e.g. vpn service only]), [], [with_gnome_specified=no])
+AC_ARG_WITH(libnm-glib, AS_HELP_STRING([--without-libnm-glib], [Build NetworkManager-softethervpn without libnm-glib comatibility]), [], [with_libnm_glib_specified=no])
 if test "$with_libnm_glib_specified" != no -a "$with_libnm_glib" != no; then
 	if test "$with_gnome_specified" != no -a "$with_gnome" == no; then
 		AC_MSG_ERROR(Building --with-libnm-glib conflicts with --without-gnome)
@@ -84,7 +84,7 @@ AM_CONDITIONAL(WITH_LIBNM_GLIB, test "$with_libnm_glib" != no)
 
 AC_ARG_ENABLE(absolute-paths, AS_HELP_STRING([--enable-absolute-paths], [Use absolute paths to in .name files. Useful for development. (default is no)]))
 
-GETTEXT_PACKAGE=NetworkManager-wireguard
+GETTEXT_PACKAGE=NetworkManager-softethervpn
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
 

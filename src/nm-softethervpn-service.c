@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <ctype.h>
 #include <errno.h>
 #include <locale.h>
@@ -67,24 +68,24 @@ static struct {
 
 /*****************************************************************************/
 
-#define NM_TYPE_WIREGUARD_PLUGIN            (nm_wireguard_plugin_get_type ())
-#define NM_WIREGUARD_PLUGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), NM_TYPE_WIREGUARD_PLUGIN, NMWireguardPlugin))
-#define NM_WIREGUARD_PLUGIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), NM_TYPE_WIREGUARD_PLUGIN, NMWireguardPluginClass))
-#define NM_IS_WIREGUARD_PLUGIN(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), NM_TYPE_WIREGUARD_PLUGIN))
-#define NM_IS_WIREGUARD_PLUGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), NM_TYPE_WIREGUARD_PLUGIN))
-#define NM_WIREGUARD_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), NM_TYPE_WIREGUARD_PLUGIN, NMWireguardPluginClass))
+#define NM_TYPE_SOFTETHERVPN_PLUGIN            (nm_softethervpn_plugin_get_type ())
+#define NM_SOFTETHERVPN_PLUGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), NM_TYPE_SOFTETHERVPN_PLUGIN, NMSoftetherVPNPlugin))
+#define NM_SOFTETHERVPN_PLUGIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), NM_TYPE_SOFTETHERVPN_PLUGIN, NMSoftetherVPNPluginClass))
+#define NM_IS_SOFTETHERVPN_PLUGIN(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), NM_TYPE_SOFTETHERVPN_PLUGIN))
+#define NM_IS_SOFTETHERVPN_PLUGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), NM_TYPE_SOFTETHERVPN_PLUGIN))
+#define NM_SOFTETHERVPN_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), NM_TYPE_SOFTETHERVPN_PLUGIN, NMSofteterVPNPluginClass))
 
 typedef struct {
 	NMVpnServicePlugin parent;
-} NMWireguardPlugin;
+} NMSoftetherVPNPlugin;
 
 typedef struct {
 	NMVpnServicePluginClass parent;
-} NMWireguardPluginClass;
+} NMSoftetherVPNPluginClass;
 
-GType nm_wireguard_plugin_get_type (void);
+GType nm_softethervpn_plugin_get_type (void);
 
-NMWireguardPlugin *nm_wireguard_plugin_new (const char *bus_name);
+NMSoftetherVPNPlugin *nm_softethervpn_plugin_new (const char *bus_name);
 
 /*****************************************************************************/
 
@@ -99,21 +100,20 @@ typedef struct _Configs{
 
 typedef struct {
 	gboolean interactive;
-	char *mgt_path;
-	char *connection_file;
-	GString *connection_config;
-} NMWireguardPluginPrivate;
+    GString  *connection_name;
+    GString  *nic_name;
+} NMSoftetherVPNPluginPrivate;
 
-G_DEFINE_TYPE (NMWireguardPlugin, nm_wireguard_plugin, NM_TYPE_VPN_SERVICE_PLUGIN)
+G_DEFINE_TYPE (NMSoftetherVPNPlugin, nm_softethervpn_plugin, NM_TYPE_VPN_SERVICE_PLUGIN)
 
-#define NM_WIREGUARD_PLUGIN_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), NM_TYPE_WIREGUARD_PLUGIN, NMWireguardPluginPrivate))
+#define NM_SOFTETHERVPN_PLUGIN_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), NM_TYPE_SOFTETHERVPN_PLUGIN, NMSoftetherVPNPluginPrivate))
 
 /*****************************************************************************/
 
 #define _NMLOG(level, ...) \
 	G_STMT_START { \
 		if (gl.log_level >= (level)) { \
-			g_print ("nm-wireguard[%ld] %-7s " _NM_UTILS_MACRO_FIRST (__VA_ARGS__) "\n", \
+			g_print ("nm-softethervpn[%ld] %-7s " _NM_UTILS_MACRO_FIRST (__VA_ARGS__) "\n", \
 			         (long) getpid (), \
 			         nm_utils_syslog_to_str (level) \
 			         _NM_UTILS_MACRO_REST (__VA_ARGS__)); \
@@ -131,28 +131,6 @@ _LOGD_enabled (void)
 #define _LOGW(...) _NMLOG(LOG_WARNING, __VA_ARGS__)
 
 /*****************************************************************************/
-
-static const char *
-wg_quick_find_exepath (void)
-{
-	static const char *paths[] = {
-		"/usr/sbin/wg-quick",
-		"/usr/bin/wg-quick",
-		"/sbin/wg-quick",
-		"/bin/wg-quick",
-		"/usr/local/sbin/wg-quick",
-		"/usr/local/bin/wg-quick",
-	};
-	int i;
-
-	for (i = 0; i < G_N_ELEMENTS(paths); i++) {
-		if (g_file_test (paths[i], G_FILE_TEST_EXISTS)) {
-			return paths[i];
-		}
-	}
-
-	return NULL;
-}
 
 // create a valid interface name from the specified string
 // this allocates memory which should be freed after usage
@@ -185,15 +163,186 @@ create_interface_name_from_string(const char *str)
 	return interface_name;
 }
 
+static gboolean
+sv_nic_create(const char *vpncmd_exec_path, const char *nic_name, int *retcode, GError **error)
+{
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "NicCreate", nic_name, NULL };
+	return g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+}
+
+static gboolean
+sv_nic_delete(const char *vpncmd_exec_path, const char *nic_name, int *retcode, GError **error)
+{
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "NicDelete", nic_name, NULL };
+	return g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+}
+
+static gboolean
+sv_account_create(
+    const char *vpncmd_exec_path,
+    const char *account_name,
+    const char *server_endpoint,
+    const char *server_port,
+    const char *server_hub,
+    const char *username,
+    const char *nic_name,
+    int *retcode,
+    GError **error)
+{
+    char *name     = g_strdup_printf("'%s'", account_name);
+	char *server   = g_strdup_printf("/server:%s:%s", server_endpoint, server_port);
+    char *hub      = g_strdup_printf("/hub:%s", server_hub);
+    char *user = g_strdup_printf("/username:%s", username);
+    char *nic      = g_strdup_printf("/nicname:%s", nic_name);
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountCreate", name, server,
+                      hub, user, nic, NULL };
+	gboolean ret = g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+
+    g_free((gchar *)name);
+    g_free((gchar *)server);
+    g_free((gchar *)hub);
+    g_free((gchar *)user);
+    g_free((gchar *)nic);
+
+    return ret;
+}
+
+static gboolean
+sv_account_delete(
+    const char *vpncmd_exec_path,
+    const char *account_name,
+    int *retcode,
+    GError **error)
+{
+    char *name = g_strdup_printf("'%s'", account_name);
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountDelete", name, NULL };
+	gboolean ret = g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+
+    g_free((gchar *)name);
+
+    return ret;
+}
+
+static gboolean
+sv_account_password_set(
+    const char *vpncmd_exec_path,
+    const char *account_name,
+    const char *password,
+    int *retcode,
+    GError **error)
+{
+    char *name = g_strdup_printf("'%s'", account_name);
+    char *pass = g_strdup_printf("/password:%s", password);
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountPasswordSet",
+                      name, pass, "/type:standard", NULL };
+	gboolean ret = g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+
+    g_free((gchar *)name);
+    g_free((gchar *)pass);
+
+    return ret;
+}
+
+static gboolean
+sv_account_connect(
+    const char *vpncmd_exec_path,
+    const char *account_name,
+    int *retcode,
+    GError **error)
+{
+    char *name = g_strdup_printf("'%s'", account_name);
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountConnect", name, NULL };
+	gboolean ret = g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+
+    g_free((gchar *)name);
+
+    return ret;
+}
+
+static gboolean
+sv_account_disconnect(
+    const char *vpncmd_exec_path,
+    const char *account_name,
+    int *retcode,
+    GError **error)
+{
+    char *name = g_strdup_printf("'%s'", account_name);
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL;
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountDisconnect", name, NULL };
+	gboolean ret = g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, NULL, NULL, retcode, error);
+
+    g_free((gchar *)name);
+
+    return ret;
+}
+
+static gboolean
+sv_account_connected(
+    const char *vpncmd_exec_path,
+    const char *account_name
+    )
+{
+    int retcode = -1;
+    char *name = g_strdup_printf("'%s'", account_name);
+    gchar *output;
+
+    GSpawnFlags flag = G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL; 
+    gchar *argv[] = { vpncmd_exec_path, "/client", "localhost", "/cmd", "AccountStatusGet", name, NULL };
+	if(!g_spawn_sync(NULL, argv,  NULL, flag, NULL, NULL, &output, NULL, &retcode, NULL)){
+		_LOGW("An error occured while checking connection");
+    }
+
+	gchar **tmp = g_strsplit(output, "\n", 0);
+    gchar **tmp2= g_strsplit(tmp[13], "|", 0);
+    gboolean ret = g_strcmp0(tmp2[1], "Connection Completed (Session Established)") == 0;
+
+    g_free((gchar *)name);
+    g_free(output);
+    g_strfreev(tmp);
+    g_strfreev(tmp2);
+
+    return ret;
+}
 /*****************************************************************************/
 
 // disconnect from the current connection
 static gboolean
-wg_disconnect(NMVpnServicePlugin *plugin,
+sv_disconnect(NMVpnServicePlugin *plugin,
 				GError **error)
 {
-	NMWireguardPluginPrivate *priv = NM_WIREGUARD_PLUGIN_GET_PRIVATE(plugin);
-	const char *wg_quick_path = wg_quick_find_exepath();
+    const char *vpncmd_exec_path = "vpncmd";
+	NMSoftetherVPNPluginPrivate *priv = NM_SOFTETHERVPN_PLUGIN_GET_PRIVATE(plugin);
+    int retcode = 1;
+
+    _LOGI("Disconnecting");
+    if(!sv_account_disconnect(vpncmd_exec_path, priv->connection_name->str, &retcode, error)){
+		_LOGW("An error occured while disconnecting (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+
+    _LOGI("Deleting account");
+    if(!sv_account_delete(vpncmd_exec_path, priv->connection_name->str, &retcode, error)){
+		_LOGW("An error occured while deleting account (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+
+    _LOGI("Deleting nic");
+    if(!sv_nic_delete(vpncmd_exec_path, priv->nic_name->str, &retcode, error)){
+		_LOGW("An error occured while deleting nic (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+    /*
 	char *filename = priv->connection_file;
 	GString *cfg_content = priv->connection_config;
 	char *command;
@@ -202,7 +351,7 @@ wg_disconnect(NMVpnServicePlugin *plugin,
 	if(wg_quick_path == NULL){
 		_LOGW("Error: Could not find wg-quick!");
 		return FALSE;
-	}
+	VPN,}
 
 	if(!filename || !cfg_content){
 		_LOGW("Error: Cannot remember the connection details for Disconnect");
@@ -232,7 +381,10 @@ wg_disconnect(NMVpnServicePlugin *plugin,
 	priv->connection_config = NULL;
 	priv->connection_file = NULL;
 
-	_LOGI("Disconnected from Wireguard Connection!");
+    */
+    g_string_free(priv->connection_name, TRUE);
+    g_string_free(priv->nic_name, TRUE);
+	_LOGI("Disconnected from SoftetherVPN Connection!");
 	return TRUE;
 }
 
@@ -325,7 +477,12 @@ static gboolean
 send_config(gpointer data)
 {
 	Configs *cfgs = data;
+	NMSoftetherVPNPluginPrivate *priv = NM_SOFTETHERVPN_PLUGIN_GET_PRIVATE(cfgs->plugin);
 
+    // check connection
+    if(!sv_account_connected("vpncmd", priv->connection_name->str)){
+        return TRUE;
+    }
 	nm_vpn_service_plugin_set_config(cfgs->plugin, cfgs->config);							
 
 	if(cfgs->ip4config){
@@ -346,12 +503,17 @@ static gboolean
 set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 {
 	NMSettingVpn *s_vpn = nm_connection_get_setting_vpn(connection);
+    NMSettingIPConfig *ip_config = nm_connection_get_setting(connection, NM_TYPE_SETTING_IP4_CONFIG);
+    NMIPAddress *ip = nm_setting_ip_config_get_address(ip_config, 0);
+    _LOGI("IP:%s", nm_ip_address_get_address(ip));
+    _LOGI("GateWay:%s", nm_setting_ip_config_get_gateway(ip_config));
+
 	GVariantBuilder builder, ip4builder, ip6builder;
 	GVariantBuilder dns_builder;
 	GVariant *config, *ip4config, *ip6config, *dns_config;
 	GVariant *val;
 	const char *setting;
-	const gchar *if_name;
+	const gchar *if_name = "vpn_test";
 	guint64 subnet = 24;
 	gboolean has_ip4 = FALSE;
 	gboolean has_ip6 = FALSE;
@@ -367,7 +529,8 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 	g_variant_builder_init(&dns_builder, G_VARIANT_TYPE_VARDICT);
 
 	// build the configs
-	setting = get_setting(s_vpn, NM_WG_KEY_ADDR_IP4);
+	// setting = get_setting(s_vpn, NM_WG_KEY_ADDR_IP4);
+    setting = nm_ip_address_get_address(ip);
 	if(setting){
 		val = ip4_to_gvariant(setting);
 		if(val){
@@ -388,20 +551,25 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 		}
 	}
 
-	setting = get_setting(s_vpn, NM_WG_KEY_DNS);
-	if(setting){
-		// TODO
-		val = g_variant_new_string(setting);
-		g_variant_builder_add(&dns_builder, "{ss}", NMV_WG_TAG_DNS, val);
+	//setting = get_setting(s_vpn, NM_WG_KEY_DNS);
+    setting = "192.168.1.151";
+	if(nm_setting_ip_config_get_num_dns(ip_config) != 0){
+        GPtrArray *dns4_list = g_ptr_array_new();
+        for(int idx=0;idx < nm_setting_ip_config_get_num_dns(ip_config);idx++)
+		    val = ip4_to_gvariant(setting);
+            if(val){
+                g_ptr_array_add(dns4_list, val);
+            }
+        if(dns4_list->len){
+            val = g_variant_new_array (G_VARIANT_TYPE_UINT32, (GVariant **) dns4_list->pdata, dns4_list->len);
+			g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_DNS, val);
+        }
 		has_dns = TRUE;
 	}
 
-	setting = get_setting(s_vpn, NM_WG_KEY_ENDPOINT);
-	if(setting){
-		// TODO
-	}
-
-	setting = get_setting(s_vpn, NM_WG_KEY_MTU);
+	//setting = get_setting(s_vpn, NM_WG_KEY_MTU);
+    /*
+    setting = "1400";
 	if(setting){
 		guint64 mtu = 1420;
 		if(!g_ascii_string_to_unsigned(setting, 10, 0, 1500, &mtu, NULL)){
@@ -411,29 +579,74 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 		g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_MTU, val);
 		g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_MTU, val);
 	}
+    */
 
-	// keep NM from creating a default route to the interface which screws up the entire routing
-	// (we already did this ourselves)
-	val = g_variant_new_boolean(TRUE);
-	g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT, val);
-	g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP6_CONFIG_NEVER_DEFAULT, val);
-	g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT, val);
-	g_variant_builder_add(&ip6builder, "{sv}", NM_VPN_PLUGIN_IP6_CONFIG_NEVER_DEFAULT, val);
+    // Server Endpoint
+    setting = nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ENDPOINT);
+    if(is_fqdn(setting)){
+        struct in_addr addr;
+		struct addrinfo hints;
+		struct addrinfo *result = NULL, *rp;
+		int err;
 
-	if_name = create_interface_name_from_string(nm_connection_get_id(connection));
+		addr.s_addr = 0;
+		memset (&hints, 0, sizeof (hints));
+
+		hints.ai_family = AF_INET;
+		hints.ai_flags = AI_ADDRCONFIG;
+		err = getaddrinfo (setting, NULL, &hints, &result);
+		if (err != 0) {
+			_LOGW ("failed to look up VPN gateway address '%s' (%d)",
+			       setting, err);
+			return FALSE;
+		}
+
+		for (rp = result; rp; rp = rp->ai_next) {
+			if (   (rp->ai_family == AF_INET)
+			    && (rp->ai_addrlen == sizeof (struct sockaddr_in))) {
+				struct sockaddr_in *inptr = (struct sockaddr_in *) rp->ai_addr;
+				memcpy (&addr, &(inptr->sin_addr), sizeof (struct in_addr));
+				break;
+			}
+		}
+
+		freeaddrinfo (result);
+		if (addr.s_addr != 0){
+			val = g_variant_new_uint32 (addr.s_addr);
+			g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_EXT_GATEWAY, val);
+        }else {
+			_LOGW ("failed to convert or look up VPN gateway address '%s'",
+			       setting);
+			return FALSE;
+		}
+    }else{
+		val = ip4_to_gvariant(setting);
+        if(val){
+			g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_EXT_GATEWAY, val);
+        }
+    }
+
+    // Default GW
+    setting = nm_setting_ip_config_get_gateway(ip_config);
+    if(setting){
+		val = ip4_to_gvariant(setting);
+        if(val){
+			g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_INT_GATEWAY, val);
+			g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_INT_GATEWAY, val);
+        }
+    }
+
+    if(nm_setting_ip_config_get_never_default(ip_config)){
+	    val = g_variant_new_boolean(TRUE);
+	    g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT, val);
+	    g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_IP6_CONFIG_NEVER_DEFAULT, val);
+	    g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_NEVER_DEFAULT, val);
+	    g_variant_builder_add(&ip6builder, "{sv}", NM_VPN_PLUGIN_IP6_CONFIG_NEVER_DEFAULT, val);
+    }
+
 	val = g_variant_new_string(if_name);
 	g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_TUNDEV, val);
 	g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_TUNDEV, val);
-	g_free((gchar *)if_name);
-
-	setting = get_setting(s_vpn, NM_WG_KEY_ADDR_IP6);
-	if(setting){
-		val = ip6_to_gvariant(setting);
-		if(val){
-			g_variant_builder_add(&ip6builder, "{sv}", NM_VPN_PLUGIN_IP6_CONFIG_ADDRESS, val);
-			has_ip6 = TRUE;
-		}
-	}
 
 	// check if we have any of IP4 or IP6 and if so, include them in the config
 	if(!has_ip4 && !has_ip6){
@@ -462,9 +675,15 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 	configs->dns_config = (has_dns) ? dns_config : NULL;
 	configs->plugin    = plugin;
 	configs->config    = config;
-	g_timeout_add(0, send_config, configs);
+	g_timeout_add(1000, send_config, configs);
 
 	return TRUE;
+}
+
+static const char *
+_arg_is_set(const char *value)
+{
+    return (value && value[0]) ? value : NULL;
 }
 
 // the common part of both Connect() and ConnectInteractively():
@@ -482,90 +701,125 @@ connect_common(NMVpnServicePlugin *plugin,
 				GVariant *details,
 				GError **error)
 {
-	NMWireguardPluginPrivate *priv = NM_WIREGUARD_PLUGIN_GET_PRIVATE(plugin);
-	const char *wg_quick_path = wg_quick_find_exepath();
-	const char *connection_name = nm_connection_get_id(connection);
-	const gchar *if_name = create_interface_name_from_string(connection_name);
+	NMSoftetherVPNPluginPrivate *priv = NM_SOFTETHERVPN_PLUGIN_GET_PRIVATE(plugin);
+    NMSettingIPConfig *ip_config = nm_connection_get_setting(connection, NM_TYPE_SETTING_IP4_CONFIG);
+    const char *ip_method = nm_setting_ip_config_get_method(ip_config);
+
+    if(strcmp(ip_method, NM_SETTING_IP4_CONFIG_METHOD_MANUAL) != 0){
+        _LOGW("Error: Only manul ip4 setting supported method:%s", ip_method);
+        return FALSE;
+    }
+
+    NMIPAddress *ip = nm_setting_ip_config_get_address(ip_config, 0);
+    _LOGI("IP:%s", nm_ip_address_get_address(ip));
+    _LOGI("GateWay:%s", nm_setting_ip_config_get_gateway(ip_config));
+
+    const char *vpncmd_exec_path = "vpncmd";
+	const char *if_name = "test";
+
+    priv->connection_name = g_string_new(nm_connection_get_id(connection));
+    priv->nic_name = g_string_new(if_name);
+	const char *connection_name = priv->connection_name->str;
 	char *command;
 	int retcode = 1;
 	char *filename = NULL;
 	GString *connection_config = NULL;
 
-	_LOGI("Setting up Wireguard Connection ('%s')", connection_name);
-	if(wg_quick_path == NULL){
-		_LOGW("Error: Could not find wg-quick!");
-		return FALSE;
-	}
+	_LOGW("Setting up SoftEtherVPN Connection ('%s')", connection_name);
 
-	// take the connection details and create the configuration string from it
-	connection_config = create_config_string(connection, error);
-	if(!connection_config){
-		_LOGW("Error: Could not create configuration for connection '%s'!", connection_name);
-		g_set_error_literal(error,
-							NM_VPN_PLUGIN_ERROR,
-							NM_VPN_PLUGIN_ERROR_FAILED,
-							"Could not create configuration from connection");
-		return FALSE;
-	}
-	priv->connection_config = connection_config;
-	filename = g_strdup_printf("/tmp/%s.conf", if_name);
-	priv->connection_file = filename;
+    if(vpncmd_exec_path == NULL){
+        _LOGW("Error: Could not find vpncmd!");
+        return FALSE;
+    }
 
-	if(!do_export(filename, connection, error)){
-		_LOGW("Error: Could not create temporary configuration file for connection '%s'", connection_name);
-		return FALSE;
-	}
-	g_chmod(filename, 0400);
+    // Delete nic before creating
+    sv_nic_delete(vpncmd_exec_path, if_name, &retcode, error);
 
-	// join together our command
-	command = g_strdup_printf("%s up '%s'", wg_quick_path, filename);
-
-	if(!g_spawn_command_line_sync(command, NULL, NULL, &retcode, error)){
-		_LOGW("An error occured while spawning wg-quick! (Error: %s)", (*error)->message);
+    // Create nic
+    _LOGI("Creating virutal nic");
+	if(!sv_nic_create(vpncmd_exec_path, if_name, &retcode, error)){
+		_LOGW("An error occured while creating virtual nic (Error: %s)", (*error)->message);
 		return FALSE;
-	}
+    }
+
+    NMSettingVpn *s_vpn = nm_connection_get_setting_vpn(connection);
+    const char *server_endpoint = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ENDPOINT));
+    const char *server_port     = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PORT));
+    const char *server_hub      = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_HUB));
+    const char *con_username    = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_USERNAME));
+    const char *con_password    = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PASSWORD));
+    _LOGI("Endpoint: %s", server_endpoint);
+    _LOGI("Port    : %s", server_port);
+    _LOGI("HUB     : %s", server_hub);
+    _LOGI("UserName: %s", con_username);
+    _LOGI("Passwrod: %s", con_password);
+
+
+    // Delete account before creating
+    sv_account_delete(vpncmd_exec_path, connection_name, &retcode, error);
+
+    _LOGI("Creating Account");
+    if(!sv_account_create(vpncmd_exec_path, connection_name, server_endpoint, server_port,
+                      server_hub, con_username, if_name, &retcode, error)){
+		_LOGW("An error occured while creating account (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+
+    _LOGI("Configuring Account");
+    if(!sv_account_password_set(vpncmd_exec_path, connection_name, con_password, &retcode, error)){
+		_LOGW("An error occured while configuring account (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+
+    _LOGI("Connecting");
+    if(!sv_account_connect(vpncmd_exec_path, connection_name, &retcode, error)){
+		_LOGW("An error occured while connecting (Error: %s)", (*error)->message);
+		return FALSE;
+    }
+
 
 	// remove the file and free the command string
+    /*
 	g_remove(filename);
 	g_free(command);
 	g_free((gchar *)if_name);
 
-	set_config(plugin, connection);
-
+    */
+    set_config(plugin, connection);
 	return TRUE;
 }
 
 // non-interactive connect
 // this version of connect is not allowed to ask the user for secrets, etc. interactively!
 static gboolean
-wg_connect (NMVpnServicePlugin *plugin,
+sv_connect (NMVpnServicePlugin *plugin,
 				NMConnection *connection,
 				GError **error)
 {
-	_LOGI("Connecting to Wireguard: '%s'", nm_connection_get_id(connection));
+	_LOGI("Connecting to SoftetherVPN: '%s'", nm_connection_get_id(connection));
 	return connect_common(plugin, connection, NULL, error);
 }
 
 // interactive connect (allows for user interaction)
 // this is the function that is actually called when the user clicks the connection in the GUI
 static gboolean
-wg_connect_interactive(NMVpnServicePlugin *plugin,
+sv_connect_interactive(NMVpnServicePlugin *plugin,
 							NMConnection *connection,
 							GVariant *details,
 							GError **error)
 {
-	_LOGI("Connecting interactively to Wireguard: '%s'", nm_connection_get_id(connection));
+	_LOGI("Connecting interactively to SoftetherVPN: '%s'", nm_connection_get_id(connection));
 	if(!connect_common(plugin, connection, details, error)){
 		return FALSE;
 	}
 
-	NM_WIREGUARD_PLUGIN_GET_PRIVATE(plugin)->interactive = TRUE;
+	NM_SOFTETHERVPN_PLUGIN_GET_PRIVATE(plugin)->interactive = TRUE;
 	return TRUE;
 }
 
 // can't really tell what secrets we need: just assume that we don't need any
 static gboolean
-wg_need_secrets (NMVpnServicePlugin *plugin,
+sv_need_secrets (NMVpnServicePlugin *plugin,
 					NMConnection *connection,
 					const char **setting_name,
 					GError **error)
@@ -576,7 +830,7 @@ wg_need_secrets (NMVpnServicePlugin *plugin,
 
 // should be fine
 static gboolean
-wg_new_secrets (NMVpnServicePlugin *plugin,
+sv_new_secrets (NMVpnServicePlugin *plugin,
                   NMConnection *connection,
 				  GError **error)
 {
@@ -584,44 +838,44 @@ wg_new_secrets (NMVpnServicePlugin *plugin,
 }
 
 static void
-nm_wireguard_plugin_init (NMWireguardPlugin *plugin)
+nm_softethervpn_plugin_init (NMSoftetherVPNPlugin *plugin)
 {
 }
 
 static void
 dispose (GObject *object)
 {
-	G_OBJECT_CLASS (nm_wireguard_plugin_parent_class)->dispose (object);
+	G_OBJECT_CLASS (nm_softethervpn_plugin_parent_class)->dispose (object);
 }
 
 static void
-nm_wireguard_plugin_class_init (NMWireguardPluginClass *plugin_class)
+nm_softethervpn_plugin_class_init (NMSoftetherVPNPluginClass *plugin_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (plugin_class);
 	NMVpnServicePluginClass *parent_class = NM_VPN_SERVICE_PLUGIN_CLASS (plugin_class);
 
-	g_type_class_add_private (object_class, sizeof (NMWireguardPluginPrivate));
+	g_type_class_add_private (object_class, sizeof (NMSoftetherVPNPluginPrivate));
 
 	object_class->dispose = dispose;
 
 	/* virtual methods */
-	parent_class->connect             = wg_connect;
-	parent_class->connect_interactive = wg_connect_interactive;
-	parent_class->need_secrets        = wg_need_secrets;
-	parent_class->disconnect          = wg_disconnect;
-	parent_class->new_secrets         = wg_new_secrets;
+	parent_class->connect             = sv_connect;
+	parent_class->connect_interactive = sv_connect_interactive;
+	parent_class->need_secrets        = sv_need_secrets;
+	parent_class->disconnect          = sv_disconnect;
+	parent_class->new_secrets         = sv_new_secrets;
 }
 
-NMWireguardPlugin *
-nm_wireguard_plugin_new (const char *bus_name)
+NMSoftetherVPNPlugin *
+nm_softethervpn_plugin_new (const char *bus_name)
 {
-	NMWireguardPlugin *plugin;
+	NMSoftetherVPNPlugin *plugin;
 	GError *error = NULL;
 
 	// NOTE: owning this name must be allowed in a DBUS configuration file:
-	// "/etc/dbus-1/system.d/nm-wireguard-service.conf"
+	// "/etc/dbus-1/system.d/nm-softethervpn-service.conf"
 	// (an example conf file was copied to the root of this project)
-	plugin =  (NMWireguardPlugin *) g_initable_new (NM_TYPE_WIREGUARD_PLUGIN, NULL, &error,
+	plugin =  (NMSoftetherVPNPlugin *) g_initable_new (NM_TYPE_SOFTETHERVPN_PLUGIN, NULL, &error,
 	                                              NM_VPN_SERVICE_PLUGIN_DBUS_SERVICE_NAME, bus_name,
 	                                              NM_VPN_SERVICE_PLUGIN_DBUS_WATCH_PEER, !gl.debug,
 	                                              NULL);
@@ -651,10 +905,10 @@ quit_mainloop (NMVpnServicePlugin *plugin, gpointer user_data)
 int
 main (int argc, char *argv[])
 {
-	NMWireguardPlugin *plugin;
+	NMSoftetherVPNPlugin *plugin;
 	gboolean persist = FALSE;
 	GOptionContext *opt_ctx = NULL;
-	gchar *bus_name = NM_DBUS_SERVICE_WIREGUARD;
+	gchar *bus_name = NM_DBUS_SERVICE_SOFTETHERVPN;
 	GError *error = NULL;
 	GMainLoop *loop;
 
@@ -669,14 +923,14 @@ main (int argc, char *argv[])
 	g_type_init ();
 #endif
 
-	if (getenv ("WIREGUARD_DEBUG")){
+	if (getenv ("SOFTETHERVPN_DEBUG")){
 		gl.debug = TRUE;
 	}
 
 	/* locale will be set according to environment LC_* variables */
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, NM_WIREGUARD_LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, NM_SOFTETHERVPN_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
@@ -688,7 +942,7 @@ main (int argc, char *argv[])
 	g_option_context_add_main_entries (opt_ctx, options, NULL);
 
 	g_option_context_set_summary (opt_ctx,
-	                              "nm-wireguard-service provides integrated Wireguard capability to NetworkManager.");
+	                              "nm-softethervpn-service provides integrated SoftetherVPN capability to NetworkManager.");
 
 	if (!g_option_context_parse (opt_ctx, &argc, &argv, &error)) {
 		g_printerr ("Error parsing the command line options: %s\n", error->message);
@@ -700,6 +954,7 @@ main (int argc, char *argv[])
 
 	gl.log_level = _nm_utils_ascii_str_to_int64 (getenv ("NM_VPN_LOG_LEVEL"),
 	                                             10, 0, LOG_DEBUG, -1);
+    gl.log_level = LOG_DEBUG;
 	if (gl.log_level >= 0) {
 		if (gl.log_level >= LOG_DEBUG)
 			gl.log_level_ovpn = 10;
@@ -723,7 +978,7 @@ main (int argc, char *argv[])
 	                                              10, 0, 1,
 	                                              gl.debug ? 0 : 1);
 
-	_LOGD ("nm-wireguard-service (version " DIST_VERSION ") starting...");
+	_LOGD ("nm-softethervpn-service (version " DIST_VERSION ") starting...");
 
 	// this is left over from openvpn, and doesn't seem to bother us...
 	if (   !g_file_test ("/sys/class/misc/tun", G_FILE_TEST_EXISTS)
@@ -733,7 +988,7 @@ main (int argc, char *argv[])
 
 	// here, the plugin is initialised
 	// (and the D-BUS thing is created: be careful that you're actually allowed to use the name!)
-	plugin = nm_wireguard_plugin_new (bus_name);
+	plugin = nm_softethervpn_plugin_new (bus_name);
 	if (!plugin){
 		exit (EXIT_FAILURE);
 	}

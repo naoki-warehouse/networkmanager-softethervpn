@@ -787,7 +787,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 	nm_connection_add_setting (connection, NM_SETTING (s_ip4));
 	g_object_set (s_ip4, NM_SETTING_IP_CONFIG_METHOD, NM_SETTING_IP4_CONFIG_METHOD_AUTO, NULL);
 	s_vpn = NM_SETTING_VPN (nm_setting_vpn_new ());
-	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPN_SERVICE_TYPE_WIREGUARD, NULL);
+	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPN_SERVICE_TYPE_SOFTETHERVPN, NULL);
 	nm_connection_add_setting (connection, NM_SETTING (s_vpn));
 
 	/* Get the default path for ca, cert, key file, these files maybe
@@ -848,7 +848,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item_int64(s_vpn, NM_WG_KEY_LISTEN_PORT, port);
+			setting_vpn_add_data_item_int64(s_vpn, NM_SV_KEY_LISTEN_PORT, port);
 			have_listen_port = TRUE;
 			printf("%s = %ld\n", NMV_WG_TAG_LISTEN_PORT, port);
 			continue;
@@ -862,19 +862,19 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 			}
 
 			if(addr4 && addr6){
-				setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ADDR_IP4, addr4);
-				setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ADDR_IP6, addr6);
+				setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ADDR_IP4, addr4);
+				setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ADDR_IP6, addr6);
 				have_ip4_addr = TRUE;
 				have_ip6_addr = TRUE;
 				printf("%s = %s, %s\n", NMV_WG_TAG_ADDRESS, addr4, addr6);
 			}
 			else if(addr4){
-				setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ADDR_IP4, addr4);
+				setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ADDR_IP4, addr4);
 				have_ip4_addr = TRUE;
 				printf("%s = %s\n", NMV_WG_TAG_ADDRESS, addr4);
 			}
 			else if(addr6){
-				setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ADDR_IP6, addr6);
+				setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ADDR_IP6, addr6);
 				have_ip6_addr = TRUE;
 				printf("%s = %s\n", NMV_WG_TAG_ADDRESS, addr6);
 			}
@@ -888,8 +888,8 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_DNS, dns);
-			printf("%s = %s\n", NM_WG_KEY_DNS, dns);
+			setting_vpn_add_data_item(s_vpn, NM_SV_KEY_DNS, dns);
+			printf("%s = %s\n", NM_SV_KEY_DNS, dns);
 			continue;
 		}
 
@@ -899,7 +899,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item_int64(s_vpn, NM_WG_KEY_MTU, mtu);
+			setting_vpn_add_data_item_int64(s_vpn, NM_SV_KEY_MTU, mtu);
 			printf("%s = %ld\n", NMV_WG_TAG_MTU, mtu);
 			continue;
 		}
@@ -910,7 +910,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_PRIVATE_KEY, key);
+			setting_vpn_add_data_item(s_vpn, NM_SV_KEY_PRIVATE_KEY, key);
 			have_priv_key = TRUE;
 			printf("%s = %s\n", NMV_WG_TAG_PRIVATE_KEY, key);
 			continue;
@@ -922,7 +922,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_PRE_UP, script);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_PRE_UP, script);
 			printf("%s = %s\n", NMV_WG_TAG_PRE_UP, script);
 			continue;
 		}
@@ -933,7 +933,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_POST_UP, script);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_POST_UP, script);
 			printf("%s = %s\n", NMV_WG_TAG_POST_UP, script);
 			continue;
 		}
@@ -944,7 +944,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_PRE_DOWN, script);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_PRE_DOWN, script);
 			printf("%s = %s\n", NMV_WG_TAG_PRE_DOWN, script);
 			continue;
 		}
@@ -955,7 +955,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_POST_DOWN, script);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_POST_DOWN, script);
 			printf("%s = %s\n", NMV_WG_TAG_POST_DOWN, script);
 			continue;
 		}
@@ -986,7 +986,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 			allowed_ips = concatenate_strings(addrs, ",");
 
 			if(addrs->len >= 1){
-				setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ALLOWED_IPS, allowed_ips);
+				//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ALLOWED_IPS, allowed_ips);
 				have_allowed_ips = TRUE;
 			}
 
@@ -1001,7 +1001,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_PUBLIC_KEY, key);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_PUBLIC_KEY, key);
 			have_pub_key = TRUE;
 			printf("%s = %s\n", NMV_WG_TAG_PUBLIC_KEY, key);
 			continue;
@@ -1013,7 +1013,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ENDPOINT, endpoint);
+			setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ENDPOINT, endpoint);
 			have_endpoint = TRUE;
 			printf("%s = %s\n", NMV_WG_TAG_ENDPOINT, endpoint);
 			continue;
@@ -1025,7 +1025,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item(s_vpn, NM_WG_KEY_PRESHARED_KEY, psk);
+			//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_PRESHARED_KEY, psk);
 			printf("%s = %s\n", NMV_WG_TAG_PRESHARED_KEY, psk);
 			continue;
 		}
@@ -1036,7 +1036,7 @@ do_import (const char *path, const char *contents, gsize contents_len, GError **
 				goto handle_line_error;
 			}
 
-			setting_vpn_add_data_item_int64(s_vpn, NM_WG_KEY_PERSISTENT_KEEP_ALIVE, pka);
+			//setting_vpn_add_data_item_int64(s_vpn, NM_SV_KEY_PERSISTENT_KEEP_ALIVE, pka);
 			printf("%s = %lu\n", NMV_WG_TAG_PERSISTENT_KEEP_ALIVE, pka);
 			continue;
 		}
@@ -1082,7 +1082,7 @@ handle_line_error:
 
 	if(!have_allowed_ips){
 		// if we don't have allowed IPs set: don't fret!
-		setting_vpn_add_data_item(s_vpn, NM_WG_KEY_ALLOWED_IPS, "0.0.0.0/0,::/0");		
+		//setting_vpn_add_data_item(s_vpn, NM_SV_KEY_ALLOWED_IPS, "0.0.0.0/0,::/0");		
 	}
 
 	if(!have_endpoint){
@@ -1163,18 +1163,18 @@ create_config_string (NMConnection *connection, GError **error)
 		return NULL;
 	}
 
-	ip4         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_ADDR_IP4));
-	ip6         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_ADDR_IP6));
-	listen_port = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_LISTEN_PORT));
-	private_key = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_PRIVATE_KEY));
-	post_up     = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_POST_UP));
-	post_down   = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_POST_DOWN));
-	public_key  = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_PUBLIC_KEY));
-	allowed_ips = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_ALLOWED_IPS));
-	endpoint    = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_ENDPOINT));
-	psk         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_PRESHARED_KEY));
-	pka         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_PERSISTENT_KEEP_ALIVE));
-	dns         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_WG_KEY_DNS));
+	ip4         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ADDR_IP4));
+	ip6         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ADDR_IP6));
+	listen_port = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_LISTEN_PORT));
+	private_key = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PRIVATE_KEY));
+	//post_up     = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_POST_UP));
+	//post_down   = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_POST_DOWN));
+	//public_key  = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PUBLIC_KEY));
+	//allowed_ips = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ALLOWED_IPS));
+	endpoint    = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_ENDPOINT));
+	//psk         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PRESHARED_KEY));
+	//pka         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_PERSISTENT_KEEP_ALIVE));
+	dns         = _arg_is_set(nm_setting_vpn_get_data_item(s_vpn, NM_SV_KEY_DNS));
 
 	if(!ip4 && !ip6){
 		g_set_error_literal(error,

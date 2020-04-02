@@ -1,3 +1,44 @@
+# Network-Manager VPN Plugin for SoftetherVPN
+ないから作った
+
+# インストール方法
+ArchLinux の softethervpn-client パッケージを導入していることを前提とする
+
+(注!) 接続元の IPv4 アドレスのセグメントと 接続先の IPv4 アドレスのセグメントが同一の場合正常に動作しません
+例
+```
+現在のネットワークで 192.168.1.3/24 の IPアドレスが割り当てられている状態で
+VPN 先のネットワークが 192.168.1.0/24 のセグメントの場合
+
+テザリング等で別のセグメントから接続するようにして下さい
+```
+```
+# ここを参考に英語を標準設定にする
+# https://qiita.com/0xmks/items/81357940986d3a4f155c
+
+# vpnclient を開始しておく
+$ sudo systemctl start softethervpn-client
+
+# vpncmd コマンドで vpnclient にアクセスできるか確認
+$ vpncmd
+確認する
+
+# プラグインのインストール
+$ ./autogen.sh
+$ make
+$ sudo make sysconfdir=/usr/lib libdir=/usr/lib install
+$ sudo systemctl restart NetworkManager
+
+# プラグインがインストールされたか確認する
+# VPN接続を作成する
+Identity 欄で接続情報を設定する
+(IPv4 Address 欄が赤くなってる？仕様です。入力しなくて良いです)
+
+IPv4 欄でスタティックな IP を設定する
+```
+
+
+
 # Network-Manager VPN Plugin for WireGuard
 
 This project is a VPN Plugin for NetworkManager that handles client-side WireGuard connections.  

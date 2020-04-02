@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /***************************************************************************
- * nm-wireguard-editor.h : GNOME UI dialogs for configuring wireguard VPN connections
+ * nm-softethervpn-editor-plugin.h : GNOME UI dialogs for configuring SoftEtherVPN VPN connections
  *
  * Copyright (C) 2008 Dan Williams, <dcbw@redhat.com>
  *
@@ -20,37 +20,37 @@
  *
  **************************************************************************/
 
-#ifndef __NM_WIREGUARD_EDITOR_PLUGIN_H__
-#define __NM_WIREGUARD_EDITOR_PLUGIN_H__
+#ifndef __NM_SOFTETHERVPN_EDITOR_PLUGIN_H__
+#define __NM_SOFTETHERVPN_EDITOR_PLUGIN_H__
 
-#define WIREGUARD_TYPE_EDITOR_PLUGIN                (wireguard_editor_plugin_get_type ())
-#define WIREGUARD_EDITOR_PLUGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), WIREGUARD_TYPE_EDITOR_PLUGIN, WireguardEditorPlugin))
-#define WIREGUARD_EDITOR_PLUGIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), WIREGUARD_TYPE_EDITOR_PLUGIN, WireguardEditorPluginClass))
-#define WIREGUARD_IS_EDITOR_PLUGIN(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), WIREGUARD_TYPE_EDITOR_PLUGIN))
-#define WIREGUARD_IS_EDITOR_PLUGIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), WIREGUARD_TYPE_EDITOR_PLUGIN))
-#define WIREGUARD_EDITOR_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), WIREGUARD_TYPE_EDITOR_PLUGIN, WireguardEditorPluginClass))
+#define SOFTETHERVPN_TYPE_EDITOR_PLUGIN                (softethervpn_editor_plugin_get_type ())
+#define SOFTETHERVPN_EDITOR_PLUGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), SOFTETHERVPN_TYPE_EDITOR_PLUGIN, SoftetherVPNEditorPlugin))
+#define SOFTETHERVPN_EDITOR_PLUGIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), SOFTETHERVPN_TYPE_EDITOR_PLUGIN, SoftetherVPNEditorPluginClass))
+#define SOFTETHERVPN_IS_EDITOR_PLUGIN(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SOFTETHERVPN_TYPE_EDITOR_PLUGIN))
+#define SOFTETHERVPN_IS_EDITOR_PLUGIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), SOFTETHERVPN_TYPE_EDITOR_PLUGIN))
+#define SOFTETHERVPN_EDITOR_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), SOFTETHERVPN_TYPE_EDITOR_PLUGIN, SoftetherVPNEditorPluginClass))
 
-typedef struct _WireguardEditorPlugin WireguardEditorPlugin;
-typedef struct _WireguardEditorPluginClass WireguardEditorPluginClass;
+typedef struct _SoftetherVPNEditorPlugin SoftetherVPNEditorPlugin;
+typedef struct _SoftetherVPNEditorPluginClass SoftetherVPNEditorPluginClass;
 
-struct _WireguardEditorPlugin {
+struct _SoftetherVPNEditorPlugin {
 	GObject parent;
 };
 
-struct _WireguardEditorPluginClass {
+struct _SoftetherVPNEditorPluginClass {
 	GObjectClass parent;
 };
 
-GType wireguard_editor_plugin_get_type (void);
+GType softethervpn_editor_plugin_get_type (void);
 
 typedef NMVpnEditor *(*NMVpnEditorFactory) (NMVpnEditorPlugin *editor_plugin,
                                             NMConnection *connection,
                                             GError **error);
 
 NMVpnEditor *
-nm_vpn_editor_factory_wireguard (NMVpnEditorPlugin *editor_plugin,
+nm_vpn_editor_factory_softethervpn (NMVpnEditorPlugin *editor_plugin,
                                NMConnection *connection,
                                GError **error);
 
-#endif /* __NM_WIREGUARD_EDITOR_PLUGIN_H__ */
+#endif /* __NM_SOFTETHERVPN_EDITOR_PLUGIN_H__ */
 
