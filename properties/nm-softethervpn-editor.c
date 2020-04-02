@@ -257,26 +257,36 @@ check_validity (SoftetherVPNEditor *self, GError **error)
 	gboolean ip6_ok = TRUE;
 
 	// check the various input fields for errors
+    /*
 	if(!check(priv, "interface_ip4_entry", check_interface_ip4_entry, NM_SV_KEY_ADDR_IP4, FALSE, error)){
 		ip4_ok = FALSE;
 	}
+    */
+    /*
 	if(!check(priv, "interface_ip6_entry", check_interface_ip6_entry, NM_SV_KEY_ADDR_IP6, FALSE, error)){
 		ip6_ok = FALSE;
 	}
+    */
+    /*
 	if(!check(priv, "interface_private_key_entry", check_interface_private_key, NM_SV_KEY_PRIVATE_KEY, TRUE, error)){
 		success = FALSE;
 	}
+    */
     /*
 	if(!check(priv, "interface_port_entry", check_interface_listen_port, NM_SV_KEY_LISTEN_PORT, TRUE, error)){
 		success = FALSE;
 	}
     */
+    /*
 	if(!check(priv, "interface_dns_entry", check_interface_dns_entry, NM_SV_KEY_DNS, TRUE, error)){
 		success = FALSE;
 	}
+    */
+    /*
 	if(!check(priv, "interface_mtu_entry", check_interface_mtu_entry, NM_SV_KEY_MTU, TRUE, error)){
 		success = FALSE;
 	}
+    */
     /*
 	if(!check(priv, "peer_public_key_entry", check_peer_public_key, NM_SV_KEY_PUBLIC_KEY, TRUE, error)){
 		success = FALSE;
@@ -304,9 +314,10 @@ check_validity (SoftetherVPNEditor *self, GError **error)
     */
 	// pre-up, post-up, pre-down, post-down are scripts and don't get validated
 
+    /*
 	if(ip4_ok && ip6_ok){
 		// IP4 and IP6 are both set: OK
-		set_error_class(priv, "interface_ip4_entry", FALSE);
+		//set_error_class(priv, "interface_ip4_entry", FALSE);
 		set_error_class(priv, "interface_ip6_entry", FALSE);
 	}
 	else if(ip4_ok){
@@ -339,6 +350,7 @@ check_validity (SoftetherVPNEditor *self, GError **error)
 			set_error_class(priv, "interface_ip6_entry", FALSE);
 		}
 	}
+    */
 
 	return success;
 }
@@ -413,6 +425,7 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
     g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
 
 	// Local IPv4 address
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip4_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
@@ -421,8 +434,10 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Local IPv6 address
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip6_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
@@ -431,8 +446,10 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// DNS
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_dns_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
@@ -441,8 +458,10 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface MTU
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_mtu_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
@@ -451,8 +470,10 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Private Key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_private_key_entry"));
 	g_return_val_if_fail (widget != NULL, FALSE);
 	if (s_vpn) {
@@ -461,6 +482,7 @@ init_editor_plugin (SoftetherVPNEditor *self, NMConnection *connection, GError *
 			gtk_entry_set_text (GTK_ENTRY (widget), value);
 	}
 	g_signal_connect (G_OBJECT (widget), "changed", G_CALLBACK (stuff_changed_cb), self);
+    */
 
 	// Interface Listening Port
     /*
@@ -653,39 +675,49 @@ update_connection (NMVpnEditor *iface,
 	}
 
 	// local ip4
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip4_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
 		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ADDR_IP4, str);
 	}
+    */
 
 	// local ip6
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_ip6_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
 		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_ADDR_IP6, str);
 	}
+    */
 
 	// private key
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_private_key_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
 		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_PRIVATE_KEY, str);
 	}
+    */
 
 	// dns
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_dns_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
 		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_DNS, str);
 	}
+    */
 
 	// mtu
+    /*
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_mtu_entry"));
 	str = gtk_entry_get_text (GTK_ENTRY (widget));
 	if (str && str[0]){
 		nm_setting_vpn_add_data_item (s_vpn, NM_SV_KEY_MTU, str);
 	}
+    */
 
 	// listen port
     /*
