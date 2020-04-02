@@ -36,7 +36,8 @@ Identity 欄で接続情報を設定する
 
 IPv4 欄でスタティックな IP を設定する
 ```
-
+![identity](https://github.com/naoki9911/networkmanager-softethervpn/blob/master/identity.png)
+![ipv4](https://github.com/naoki9911/networkmanager-softethervpn/blob/master/ipv4.png)
 
 
 # Network-Manager VPN Plugin for WireGuard
