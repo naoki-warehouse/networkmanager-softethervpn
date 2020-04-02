@@ -1724,7 +1724,7 @@ config: http-proxy-retry or socks-proxy-retry</property>
       <action-widget response="-5">ok_button</action-widget>
     </action-widgets>
   </object>
-  <object class="GtkBox" id="wg-vbox">
+  <object class="GtkBox" id="sv-vbox">
     <property name="width_request">500</property>
     <property name="height_request">400</property>
     <property name="visible">True</property>

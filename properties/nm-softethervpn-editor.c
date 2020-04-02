@@ -862,7 +862,7 @@ softethervpn_editor_new (NMConnection *connection, GError **error)
 		g_return_val_if_reached (NULL);
 	}
 
-	priv->widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "wg-vbox"));
+	priv->widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "sv-vbox"));
 	if (!priv->widget) {
 		g_set_error_literal (error, NMV_EDITOR_PLUGIN_ERROR, 0, _("could not load UI widget"));
 		g_object_unref (object);
