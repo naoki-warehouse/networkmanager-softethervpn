@@ -24,9 +24,9 @@ $ vpncmd
 確認する
 
 # プラグインのインストール
-$ ./autogen.sh
-$ make
-$ sudo make sysconfdir=/usr/lib libdir=/usr/lib install
+$ ./autogen.sh sysconfdir=/usr/lib libdir=/usr/lib 
+$ make 
+$ sudo make install
 $ sudo systemctl restart NetworkManager
 
 # プラグインがインストールされたか確認する
