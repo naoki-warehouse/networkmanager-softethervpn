@@ -24,6 +24,7 @@ $ vpncmd
 確認する
 
 # プラグインのインストール
+$ ./autogen.sh
 $ ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --libexecdir=/usr/lib --disable-static
 $ make 
 $ sudo make install
