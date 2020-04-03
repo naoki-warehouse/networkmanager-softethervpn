@@ -52,3 +52,5 @@ properties/tests/test-import-export-glib
 properties/resources.[ch]
 /NetworkManager-openvpn*.tar*
 /po/NetworkManager-openvpn.pot
+pkg
+*.pkg.tar.xz
