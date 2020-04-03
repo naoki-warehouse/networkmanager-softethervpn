@@ -10,17 +10,20 @@ depends=()
 makedepends=(libnm intltool git gcc make automake autoconf libnm-glib libtool)
 
 prepare() {
-  intltoolize --automake --copy
-  autoreconf -fvi
+  cd "$startdir"
+  ./autogen.sh
 }
 
 build() {
+  cd "$startdir"
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
   --libexecdir=/usr/lib --disable-static 
   make
 }
 
 package() {
+  cd "$startdir"
   make DESTDIR="$pkgdir" install dbusservicedir=/usr/share/dbus-1/system.d
+  echo 'u nm-softethervpn - "NetworkManager SoftEtherVPN"' |
   install -Dm644 /dev/stdin "$pkgdir/usr/lib/sysusers.d/$pkgname.conf"
 }
