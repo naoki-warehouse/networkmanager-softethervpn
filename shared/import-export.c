@@ -494,26 +494,6 @@ _parse_ip4_address(const char *address)
 	return ip4;
 }
 
-// analogous to the ip4 variant above
-static char *
-_parse_ip6_address(const char *address)
-{
-	char *ip6 = g_strdup(address);
-	size_t len = strlen(ip6);
-
-	// same as for IP4
-	if(ip6[len - 1] == ','){
-		ip6[len - 1] = '\0';
-	}
-
-	if(!is_ip6(ip6)){
-		g_free(ip6);
-		ip6 = NULL;
-	}
-
-	return ip6;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
