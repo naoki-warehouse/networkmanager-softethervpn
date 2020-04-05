@@ -678,42 +678,6 @@ ip4next:
 	return success;
 }
 
-// parse a script: just concatenate the parts of the read line after the equals sign
-static gboolean
-parse_script(const char **line, char **script, char **out_error)
-{
-	int idx = 0;
-	char *tmp = NULL;
-	int len = 0;
-	int idx2 = 0;
-
-	if(!_parse_common(line, &idx, out_error)){
-		*script = NULL;
-		return FALSE;
-	}
-
-	// calculate how much space we are going to need
-	idx2 = idx;
-	while(line && line[idx2]){
-		// one extra character for the space between the commands
-		len += strlen(line[idx2]) + 1;
-		idx2++;
-	}
-
-	// the last extra slot isn't taken by a space, but by a NULL-byte
-	*script = g_malloc(len);
-	tmp = g_stpcpy(*script, "");
-	while(line && line[idx]){
-		tmp = g_stpcpy(tmp, line[idx]);
-		if(line[idx+1]){
-			tmp = g_stpcpy(tmp, " ");
-		}
-		idx++;
-	}
-
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
