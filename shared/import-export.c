@@ -714,49 +714,6 @@ parse_script(const char **line, char **script, char **out_error)
 	return TRUE;
 }
 
-// create a single string from the contents of a GArray
-static gchar *
-concatenate_strings(const GArray *string_array, char *separator)
-{
-	int i = 0;
-	int len = 0;
-	int sep_len = 0;
-	char *result;
-	char *tmp;
-
-	if(!string_array){
-		return NULL;
-	}
-
-	if(!separator){
-		separator = ",";
-	}
-
-	// check how much space we are going to need
-	sep_len = strlen(separator);
-	for(i = 0; i < string_array->len; i++){
-		len += strlen(g_array_index(string_array, char *, i));
-		if(i < (string_array->len - 1)){
-			len += sep_len;
-		}
-	}
-
-	// space for the trailing NULL-byte
-	len += 1;
-
-	// allocate memory and do the appending
-	result = g_malloc(len);
-	tmp = g_stpcpy(result, "");
-	for(i = 0; i < string_array->len; i++){
-		tmp = g_stpcpy(tmp, g_array_index(string_array, char *, i));
-		if(i < (string_array->len - 1)){
-			tmp = g_stpcpy(tmp, separator);
-		}
-	}
-
-	return result;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
