@@ -39,14 +39,6 @@
 
 const char *_nmovpn_test_temp_path = NULL;
 
-/*****************************************************************************/
-
-static const char *
-_arg_is_set (const char *value)
-{
-	return (value && value[0]) ? value : NULL;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
