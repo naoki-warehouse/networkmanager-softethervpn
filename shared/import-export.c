@@ -397,22 +397,6 @@ _parse_common (const char **line, int *idx, char **out_error)
 	return TRUE;
 }
 
-// parse the endpoint (can be just about anything)
-static gboolean
-parse_endpoint(const char **line, char **endpoint, char **out_error)
-{
-	int idx = 0;
-	if(!_parse_common(line, &idx, out_error)){
-		*endpoint = NULL;
-		return FALSE;
-	}
-
-	// TODO maybe restrict to IPs?
-
-	*endpoint = g_strdup(line[idx]);
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
