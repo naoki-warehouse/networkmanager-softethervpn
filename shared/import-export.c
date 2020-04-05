@@ -142,19 +142,6 @@ _ch_skip_over_leading_whitespace (const char **str, gsize *len)
 		_ch_step_1 (str, len);
 }
 
-static void
-_strbuf_append_c (char **buf, gsize *len, char ch)
-{
-	nm_assert (buf);
-	nm_assert (len);
-
-	g_return_if_fail (*len > 0);
-
-	(*buf)[0] = ch;
-	(*len)--;
-	*buf = &(*buf)[1];
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
