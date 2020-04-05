@@ -106,19 +106,6 @@ setting_vpn_add_data_item_int64 (NMSettingVpn *setting,
 	setting_vpn_add_data_item_v (setting, key, "%"G_GINT64_FORMAT, value);
 }
 
-static void
-setting_vpn_add_data_item (NMSettingVpn *setting,
-                           const char *key,
-                           const char *value)
-{
-	g_return_if_fail (NM_IS_SETTING_VPN (setting));
-	g_return_if_fail (key && key[0]);
-	g_return_if_fail (value && value[0]);
-	g_return_if_fail (_is_utf8 (value));
-
-	nm_setting_vpn_add_data_item (setting, key, value);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
