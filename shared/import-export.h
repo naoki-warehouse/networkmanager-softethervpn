@@ -33,6 +33,4 @@ NMConnection *do_import (const char *path, const char *contents, gsize contents_
 
 gboolean do_export (const char *path, NMConnection *connection, GError **error);
 
-GString *create_config_string (NMConnection *connection, GError **error);
-
 #endif
