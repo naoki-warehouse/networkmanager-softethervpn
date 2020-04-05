@@ -636,48 +636,6 @@ parse_address(const char **line, char **ip4_address, char **ip6_address, char **
 	return success;
 }
 
-// parse IPs (v4 and v6) from a line and save them in a GArray
-static gboolean
-parse_allowed_ips(const char **line, GArray **addresses, char **out_error)
-{
-	int idx = 0;
-	char *ip4 = NULL;
-	char *ip6 = NULL;
-	gboolean success = FALSE;
-
-	if(!_parse_common(line, &idx, out_error)){
-		*addresses = NULL;
-		return FALSE;
-	}
-
-	*addresses = g_array_new(TRUE, TRUE, sizeof(char *));
-	while(line && line[idx]){
-		// check if we have an IP4 or IP6 at our hands and if so,
-		// add them to our array of Allowed Addresses
-		ip4 = _parse_ip4_address(line[idx]);
-		if(ip4){
-			g_array_append_val(*addresses, ip4);
-			success = TRUE;
-			goto ip4next;
-		}
-
-		ip6 = _parse_ip6_address(line[idx]);
-		if(ip6){
-			g_array_append_val(*addresses, ip6);
-			success = TRUE;
-		}
-
-ip4next:
-		idx++;
-	}
-
-	if(!success){
-		*out_error = g_strdup_printf("Assignment of Allowed IPs was invalid (requires at least one valid IPv4 or IPv6 address)!");
-		g_array_free(*addresses, TRUE);
-	}
-	return success;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
