@@ -355,48 +355,6 @@ args_next_line (const char **content,
 	return TRUE;
 }
 
-/*****************************************************************************/
-
-// take an array of strings, which is basically the read line split at specific tokens
-// (here, it's most likely split at each white-space)
-// "search" for the first index of the equals sign and store that index in the argument 'idx'
-static gboolean
-_parse_common (const char **line, int *idx, char **out_error)
-{
-	int len = 0;
-	while(line && line[len]){
-		len++;
-	}
-
-	// TODO fix scenario when we have "KEY=VALUE" and not "KEY = VALUE"
-
-	if(!line[0]){
-		*out_error = g_strdup_printf("Nothing found in the line");
-		return FALSE;
-	}
-	else if(!line[1]){
-		*out_error = g_strdup_printf("No value found for setting '%s'", line[0]);
-		return FALSE;
-	}
-	else if(!g_strcmp0("=", line[1])){
-		// we have an equals sign included
-		// KEY = VALUE
-		if(!line[2]){
-			*out_error = g_strdup_printf("Expected line to be of form KEY = VALUE");
-			return FALSE;
-		}
-
-		*idx = 2;
-	}
-	else{
-		// we don't have an equals sign included
-		// KEY VALUE
-		*idx = 1;
-	}
-
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
