@@ -22,8 +22,6 @@
 #ifndef _IMPORT_EXPORT_H_
 #define _IMPORT_EXPORT_H_
 
-extern const char *_nmovpn_test_temp_path;
-
 NMConnection *do_import (const char *path, const char *contents, gsize contents_len, GError **error);
 
 gboolean do_export (const char *path, NMConnection *connection, GError **error);

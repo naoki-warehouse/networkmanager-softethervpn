@@ -37,8 +37,6 @@
 #include "utils.h"
 #include "nm-utils/nm-shared-utils.h"
 
-const char *_nmovpn_test_temp_path = NULL;
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
