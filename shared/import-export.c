@@ -473,27 +473,6 @@ parse_preshared_key(const char **line, char **key, char **out_error)
 	return TRUE;
 }
 
-// check if the string contains a valid IP4 address (also, remove a trailing comma if there is one)
-static char *
-_parse_ip4_address(const char *address)
-{
-	char *ip4 = g_strdup(address);
-	size_t len = strlen(ip4);
-
-	// if there is a trailing comma, remove it
-	// -- might be, because the config can have an IP4 and IP6
-	if(ip4[len - 1] == ','){
-		ip4[len - 1] = '\0';
-	}
-
-	if(!is_ip4(ip4)){
-		g_free(ip4);
-		ip4 = NULL;
-	}
-
-	return ip4;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
