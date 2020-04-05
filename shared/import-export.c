@@ -54,14 +54,6 @@ _auto_free_gstring_p (GString **ptr)
 		g_string_free (*ptr, TRUE);
 }
 
-static gboolean
-_is_utf8 (const char *str)
-{
-	g_return_val_if_fail (str, FALSE);
-
-	return g_utf8_validate (str, -1, NULL);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
