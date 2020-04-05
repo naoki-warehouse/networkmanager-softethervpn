@@ -1125,9 +1125,6 @@ args_write_line_v (GString *f, gsize nargs, const char **args)
 	}
 	g_string_append_c (f, '\n');
 }
-#define args_write_line(f, ...) args_write_line_v(f, NM_NARG (__VA_ARGS__), (const char *[]) { __VA_ARGS__ })
-
-/*****************************************************************************/
 
 gboolean
 do_export (const char *path, NMConnection *connection, GError **error)
