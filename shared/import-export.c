@@ -295,15 +295,6 @@ args_parse_line (const char *line,
 	return TRUE;
 }
 
-gboolean
-_nmovpn_test_args_parse_line (const char *line,
-                              gsize line_len,
-                              const char ***out_p,
-                              char **out_error)
-{
-	return args_parse_line (line, line_len, out_p, out_error);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
