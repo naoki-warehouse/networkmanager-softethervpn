@@ -119,22 +119,6 @@ setting_vpn_add_data_item (NMSettingVpn *setting,
 	nm_setting_vpn_add_data_item (setting, key, value);
 }
 
-/*****************************************************************************/
-
-static char
-_ch_step_1 (const char **str, gsize *len)
-{
-	char ch;
-	g_assert (str);
-	g_assert (len && *len > 0);
-
-	ch = (*str)[0];
-
-	(*str)++;
-	(*len)--;
-	return ch;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
