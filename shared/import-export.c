@@ -1274,26 +1274,8 @@ create_config_string (NMConnection *connection, GError **error)
 	return g_steal_pointer (&f);
 }
 
-// export the connection's configuration to a file in our (wg-quick) format
 gboolean
 do_export (const char *path, NMConnection *connection, GError **error)
 {
-	nm_auto(_auto_free_gstring_p) GString *f = NULL;
-	gs_free_error GError *local = NULL;
-
-	f = create_config_string (connection, error);
-	if (!f){
-		return FALSE;
-	}
-
-	if (!g_file_set_contents (path, f->str, f->len, &local)) {
-		g_set_error (error,
-		             NMV_EDITOR_PLUGIN_ERROR,
-		             NMV_EDITOR_PLUGIN_ERROR_FILE_NOT_VPN,
-		             _("failed to write file: %s"),
-		             local->message);
-		return FALSE;
-	}
-
-	return TRUE;
+	return FALSE;
 }
