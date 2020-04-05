@@ -591,51 +591,6 @@ parse_persistent_keep_alive(const char **line, guint64 *pka, char **out_error)
 	return success;
 }
 
-// parse the line and check if there were any IP4 and IP6 included
-// (if there are more than just one IP4, the later take precedence; same for IP6)
-//
-// ip4_address: either the string that was recognised as an IP4 address or NULL if none was found
-// ip6_address: pretty much the same, just for IP6
-static gboolean
-parse_address(const char **line, char **ip4_address, char **ip6_address, char **out_error)
-{
-	int idx = 0;
-	char *ip4 = NULL;
-	char *ip6 = NULL;
-	gboolean success = FALSE;
-
-	if(!_parse_common(line, &idx, out_error)){
-		*ip4_address = NULL;
-		*ip6_address = NULL;
-		return FALSE;
-	}
-
-	while(line && line[idx]){
-		ip4 = _parse_ip4_address(line[idx]);
-		if(ip4){
-			*ip4_address = ip4;
-			idx++;
-			success = TRUE;
-			continue;
-		}
-
-		ip6 = _parse_ip6_address(line[idx]);
-		if(ip6){
-			*ip6_address = ip6;
-			success = TRUE;
-		}
-		
-		idx++;
-	}
-
-	if(!success)
-	{
-		*out_error = g_strdup_printf("Assignment of Addresses was invalid (requires at least one valid IPv4 or IPv6 address)!");
-	}
-
-	return success;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
