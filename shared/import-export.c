@@ -436,24 +436,6 @@ parse_listen_port(const char **line, guint64 *port, char **out_error)
 	return success;
 }
 
-// parse the private key
-static gboolean
-parse_private_key(const char **line, char **key, char **out_error)
-{
-	int idx = 0;
-	if(!_parse_common(line, &idx, out_error)){
-		*key = NULL;
-		return FALSE;
-	}
-
-	*key = g_strdup(line[idx]);
-
-	// TODO check if base64?
-	// TOOD check length?
-
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
