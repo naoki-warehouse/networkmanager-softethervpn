@@ -135,13 +135,6 @@ _ch_step_1 (const char **str, gsize *len)
 	return ch;
 }
 
-static void
-_ch_skip_over_leading_whitespace (const char **str, gsize *len)
-{
-	while (*len > 0 && g_ascii_isspace ((*str)[0]))
-		_ch_step_1 (str, len);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
