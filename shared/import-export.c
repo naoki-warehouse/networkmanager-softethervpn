@@ -413,29 +413,6 @@ parse_endpoint(const char **line, char **endpoint, char **out_error)
 	return TRUE;
 }
 
-// parse the local listen port (integer with range [0 - 65535])
-static gboolean
-parse_listen_port(const char **line, guint64 *port, char **out_error)
-{
-	int idx = 0;
-	char *tmp = NULL;
-	gboolean success = TRUE;
-
-	if(!_parse_common(line, &idx, out_error)){
-		return FALSE;
-	}
-
-	tmp = g_strdup(line[idx]);
-	if(!g_ascii_string_to_unsigned(tmp, 10, 0, 65535, port, NULL)){
-		*out_error = g_strdup_printf("'%s' is not a valid port assignment!", tmp);
-		*port = -1;
-		success = FALSE;
-	}
-
-	g_free(tmp);
-	return success;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
