@@ -304,57 +304,6 @@ _nmovpn_test_args_parse_line (const char *line,
 	return args_parse_line (line, line_len, out_p, out_error);
 }
 
-// return the next line of the content
-// and adjust the content pointer to start at the line after the current one
-static gboolean
-args_next_line (const char **content,
-                gsize *content_len,
-                const char **cur_line,
-                gsize *cur_line_len,
-                const char **cur_line_delimiter)
-{
-	const char *s;
-	gsize l, offset;
-
-	g_return_val_if_fail (content, FALSE);
-	g_return_val_if_fail (content_len, FALSE);
-	g_return_val_if_fail (cur_line, FALSE);
-	g_return_val_if_fail (cur_line_len, FALSE);
-	g_return_val_if_fail (cur_line_delimiter, FALSE);
-
-	l = *content_len;
-
-	if (l <= 0)
-		return FALSE;
-
-	*cur_line = s = *content;
-
-	while (l > 0 && !NM_IN_SET (s[0], '\0', '\n'))
-		_ch_step_1 (&s, &l);
-
-	offset = s - *content;
-	*cur_line_len = offset;
-
-	/* cur_line_delimiter will point to a (static) string
-	 * containing the dropped character.
-	 * Or NULL if we reached the end of content. */
-	if (l > 0) {
-		if (s[0] == '\0') {
-			*cur_line_delimiter = "\0";
-		} else {
-			*cur_line_delimiter = "\n";
-		}
-		offset++;
-	} else {
-		*cur_line_delimiter = NULL;
-	}
-
-	*content_len -= offset;
-	*content += offset;
-
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
