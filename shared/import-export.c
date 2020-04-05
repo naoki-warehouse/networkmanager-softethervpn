@@ -1101,31 +1101,6 @@ out_error:
 	return NULL;
 }
 
-/*****************************************************************************/
-
-static void
-args_write_line_v (GString *f, gsize nargs, const char **args)
-{
-	gsize i;
-	gboolean printed = FALSE;
-
-	nm_assert (args);
-	nm_assert (args[0]);
-
-	for (i = 0; i < nargs; i++) {
-		/* NULL is skipped. This is for convenience to specify
-		 * optional arguments. */
-		if (!args[i])
-			continue;
-
-		if (printed)
-			g_string_append_c (f, ' ');
-		printed = TRUE;
-		g_string_append (f, args[i]);
-	}
-	g_string_append_c (f, '\n');
-}
-
 gboolean
 do_export (const char *path, NMConnection *connection, GError **error)
 {
