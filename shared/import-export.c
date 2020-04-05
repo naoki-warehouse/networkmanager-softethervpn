@@ -98,14 +98,6 @@ setting_vpn_add_data_item_v (NMSettingVpn *setting,
 	g_free (s);
 }
 
-static void
-setting_vpn_add_data_item_int64 (NMSettingVpn *setting,
-                                 const char *key,
-                                 gint64 value)
-{
-	setting_vpn_add_data_item_v (setting, key, "%"G_GINT64_FORMAT, value);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
