@@ -544,29 +544,6 @@ parse_dns(const char **line, char **dns, char **out_error)
 	return TRUE;
 }
 
-// parse an MTU from the line (integer with range [0 - 1500])
-static gboolean
-parse_mtu(const char **line, guint64 *mtu, char **out_error)
-{
-	int idx = 0;
-	char *tmp = NULL;
-	gboolean success = TRUE;
-
-	if(!_parse_common(line, &idx, out_error)){
-		return FALSE;
-	}
-
-	tmp = g_strdup(line[idx]);
-	if(!g_ascii_string_to_unsigned(tmp, 10, 0, 1500, mtu, NULL)){
-		*out_error = g_strdup_printf("'%s' is not a valid MTU assignment!", tmp);
-		*mtu = -1;
-		success = FALSE;
-	}
-
-	g_free(tmp);
-	return success;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
