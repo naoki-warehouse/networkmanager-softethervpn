@@ -62,42 +62,6 @@ _is_utf8 (const char *str)
 	return g_utf8_validate (str, -1, NULL);
 }
 
-/*****************************************************************************/
-
-static void
-__attribute__((__format__ (__printf__, 3, 4)))
-setting_vpn_add_data_item_v (NMSettingVpn *setting,
-                             const char *key,
-                             const char *format,
-                             ...)
-{
-	char buf[256];
-	char *s;
-	int l;
-	va_list ap, ap2;
-
-	g_return_if_fail (NM_IS_SETTING_VPN (setting));
-	g_return_if_fail (key && key[0]);
-
-	/* let's first try with a stack allocated buffer,
-	 * it's large enough for most cases. */
-	va_start (ap, format);
-	va_copy (ap2, ap);
-	l = g_vsnprintf (buf, sizeof (buf), format, ap2);
-	va_end (ap2);
-
-	if (l < sizeof (buf) - 1) {
-		va_end (ap);
-		nm_setting_vpn_add_data_item (setting, key, buf);
-		return;
-	}
-
-	s = g_strdup_vprintf (format, ap);
-	va_end (ap);
-	nm_setting_vpn_add_data_item (setting, key, s);
-	g_free (s);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
