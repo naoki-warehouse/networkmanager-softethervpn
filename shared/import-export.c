@@ -47,13 +47,6 @@ _arg_is_set (const char *value)
 	return (value && value[0]) ? value : NULL;
 }
 
-static void
-_auto_free_gstring_p (GString **ptr)
-{
-	if (*ptr)
-		g_string_free (*ptr, TRUE);
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
