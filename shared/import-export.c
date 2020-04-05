@@ -514,36 +514,6 @@ _parse_ip6_address(const char *address)
 	return ip6;
 }
 
-// parse an IP (4 or 6) address from the line
-static gboolean
-parse_dns(const char **line, char **dns, char **out_error)
-{
-	int idx = 0;
-	char *tmp = NULL;
-
-	if(!_parse_common(line, &idx, out_error)){
-		*dns = NULL;
-		return FALSE;
-	}
-
-	tmp = _parse_ip4_address(line[idx]);
-	if(!tmp){
-		// if the DNS isn't an IPv4 address, let's try IPv6...
-		tmp = _parse_ip6_address(line[idx]);
-		if(tmp){
-			*dns = tmp;
-			return TRUE;
-		}
-
-		*out_error = g_strdup_printf("'%s' is not a valid DNS address!", line[idx]);
-		*dns = NULL;
-		return FALSE;
-	}
-
-	*dns = tmp;
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
