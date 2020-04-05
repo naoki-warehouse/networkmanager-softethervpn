@@ -342,46 +342,7 @@ sv_disconnect(NMVpnServicePlugin *plugin,
 		_LOGW("An error occured while deleting nic (Error: %s)", (*error)->message);
 		return FALSE;
     }
-    /*
-	char *filename = priv->connection_file;
-	GString *cfg_content = priv->connection_config;
-	char *command;
-	int retcode = 1;
 
-	if(wg_quick_path == NULL){
-		_LOGW("Error: Could not find wg-quick!");
-		return FALSE;
-	VPN,}
-
-	if(!filename || !cfg_content){
-		_LOGW("Error: Cannot remember the connection details for Disconnect");
-		g_set_error_literal(error,
-							NM_VPN_PLUGIN_ERROR,
-							NM_VPN_PLUGIN_ERROR_FAILED,
-							"Cannot remember the connection details for Disconnect");
-		return FALSE;
-	}
-
-	// create the temporary configuration file
-	g_file_set_contents(filename, cfg_content->str, cfg_content->len, error);
-	g_chmod(filename, 0400);
-
-	// join together our command
-	command = g_strdup_printf("%s down '%s'", wg_quick_path, filename);
-
-	if(!g_spawn_command_line_sync(command, NULL, NULL, &retcode, error)){
-		_LOGW("An error occured while spawning wg-quick! (Error: %s)", (*error)->message);
-	}
-
-	// delete the file and free temporary private data
-	g_remove(filename);
-	g_free(command);
-	g_string_free(priv->connection_config, TRUE);
-	g_free(priv->connection_file);
-	priv->connection_config = NULL;
-	priv->connection_file = NULL;
-
-    */
     g_string_free(priv->connection_name, TRUE);
     g_string_free(priv->nic_name, TRUE);
 	_LOGI("Disconnected from SoftetherVPN Connection!");
