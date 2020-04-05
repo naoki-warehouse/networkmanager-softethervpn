@@ -454,25 +454,6 @@ parse_private_key(const char **line, char **key, char **out_error)
 	return TRUE;
 }
 
-#define parse_public_key(line, key, out_error) parse_private_key(line, key, out_error)
-
-// parse the pre-shared key
-static gboolean
-parse_preshared_key(const char **line, char **key, char **out_error)
-{
-	int idx = 0;
-	if(!_parse_common(line, &idx, out_error)){
-		*key = NULL;
-		return FALSE;
-	}
-
-	*key = g_strdup(line[idx]);
-
-	// TODO any checks?
-
-	return TRUE;
-}
-
 NMConnection *
 do_import (const char *path, const char *contents, gsize contents_len, GError **error)
 {
